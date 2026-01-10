@@ -239,9 +239,12 @@ export function CreateNoticeForm({
   };
 
   return (
-    <div className="max-w-full lg:max-w-4xl mx-auto px-4 sm:px-0">
-      <div className="flex items-center gap-2 mb-4 md:mb-6">
-        <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded">
+    <div className="max-w-full mx-auto px-4 sm:px-0">
+      <div className="flex items-center gap-3 mb-4 md:mb-6">
+        <button
+          onClick={onCancel}
+          className="p-1 hover:bg-gray-100 border cursor-pointer rounded "
+        >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
@@ -249,29 +252,27 @@ export function CreateNoticeForm({
         </h1>
       </div>
 
-      <Card>
-        <CardHeader className="p-4 md:p-6">
-          <CardDescription>Please fill in the details below</CardDescription>
-        </CardHeader>
+      <div className="bg-white border border-gray-300 rounded-lg p-1 text-[#232948]">
+        <div className="p-4 border-b border-gray-300 bg-[#FAFAFD]">
+          <p className="text-[16px]">Please fill in the details below</p>
+        </div>
 
-        <CardContent className="p-4 md:p-6 space-y-6">
-          <div className="space-y-2">
-            <Label
-              htmlFor="department"
-              className="text-sm md:text-base font-semibold"
-            >
-              * Target Department(s) or Individual
-            </Label>
+        <div className="p-4 md:p-6 space-y-6 rounded-lg">
+          <div className="space-y-2 p-6 bg-[#F5F6FA]">
+            <p className="text-sm md:text-base font-semibold  mb-2">
+              <span className="text-red-500">*</span> Target Department(s) or
+              Individual
+            </p>
             <Select
               value={formData.targetDepartment}
               onValueChange={(value) =>
                 setFormData((prev) => ({ ...prev, targetDepartment: value }))
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-10 border-gray-300">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {DEPARTMENTS.map((dept) => (
                   <SelectItem key={dept.value} value={dept.value}>
                     {dept.label}
@@ -287,12 +288,9 @@ export function CreateNoticeForm({
           </div>
 
           <div className="space-y-2">
-            <Label
-              htmlFor="title"
-              className="text-sm md:text-base font-semibold"
-            >
-              * Notice Title
-            </Label>
+            <p className="text-sm md:text-base font-semibold mb-2">
+              <span className="text-red-500">*</span> Notice Title
+            </p>
             <Input
               id="title"
               placeholder="Write the Title of Notice"
@@ -303,7 +301,7 @@ export function CreateNoticeForm({
                   noticeTitle: e.target.value,
                 }))
               }
-              className="h-10 text-sm md:text-base"
+              className="h-10 text-sm md:text-base border-gray-300"
             />
             {errors.noticeTitle && (
               <p className="text-xs md:text-sm text-red-600">
@@ -314,20 +312,17 @@ export function CreateNoticeForm({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="employeeId"
-                className="text-sm md:text-base font-semibold"
-              >
-                * Select Employee ID
-              </Label>
+              <p className="text-sm md:text-base font-semibold mb-2">
+                <span className="text-red-500">*</span> Select Employee ID
+              </p>
               <Select
                 value={formData.employeeId}
                 onValueChange={handleEmployeeSelect}
               >
-                <SelectTrigger className="h-10 text-sm md:text-base">
+                <SelectTrigger className="h-10 text-sm md:text-base border-gray-300">
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {employees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
                       {emp.id}
@@ -343,33 +338,27 @@ export function CreateNoticeForm({
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="employeeName"
-                className="text-sm md:text-base font-semibold"
-              >
-                * Employee Name
-              </Label>
+              <p className="text-sm md:text-base font-semibold mb-2">
+                <span className="text-red-500">*</span> Employee Name
+              </p>
               <Input
                 id="employeeName"
                 placeholder="Enter employee full name"
                 value={formData.employeeName}
-                className="h-10 text-sm md:text-base"
+                className="h-10 text-sm md:text-base border-gray-300"
                 disabled
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="position"
-                className="text-sm md:text-base font-semibold"
-              >
-                * Position
-              </Label>
+              <p className="text-sm md:text-base font-semibold mb-2">
+                <span className="text-red-500">*</span> Position
+              </p>
               <Input
                 id="position"
                 placeholder="Select employee department"
                 value={formData.position}
-                className="h-10 text-sm md:text-base"
+                className="h-10 text-sm md:text-base border-gray-300"
                 disabled
               />
             </div>
@@ -377,22 +366,19 @@ export function CreateNoticeForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="type"
-                className="text-sm md:text-base font-semibold"
-              >
-                * Notice Type
-              </Label>
+              <p className="text-sm md:text-base font-semibold mb-2">
+                <span className="text-red-500">*</span> Notice Type
+              </p>
               <Select
                 value={formData.noticeType}
                 onValueChange={(value) =>
                   setFormData((prev) => ({ ...prev, noticeType: value }))
                 }
               >
-                <SelectTrigger className="h-10 text-sm md:text-base">
+                <SelectTrigger className="h-10 text-sm md:text-base border-gray-300">
                   <SelectValue placeholder="Select Notice Type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {NOTICE_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -408,12 +394,9 @@ export function CreateNoticeForm({
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="publishDate"
-                className="text-sm md:text-base font-semibold"
-              >
-                * Publish Date
-              </Label>
+              <p className="text-sm md:text-base font-semibold mb-2">
+                <span className="text-red-500">*</span> Publish Date
+              </p>
               <Input
                 id="publishDate"
                 type="date"
@@ -424,7 +407,7 @@ export function CreateNoticeForm({
                     publishDate: e.target.value,
                   }))
                 }
-                className="h-10 text-sm md:text-base"
+                className="h-10 text-sm md:text-base border-gray-300"
               />
               {errors.publishDate && (
                 <p className="text-xs md:text-sm text-red-600">
@@ -435,12 +418,9 @@ export function CreateNoticeForm({
           </div>
 
           <div className="space-y-2">
-            <Label
-              htmlFor="body"
-              className="text-sm md:text-base font-semibold"
-            >
+            <p className="text-sm md:text-base font-semibold mb-2">
               Notice Body
-            </Label>
+            </p>
             <Textarea
               id="body"
               placeholder="Write the details about notice"
@@ -448,39 +428,9 @@ export function CreateNoticeForm({
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, noticeBody: e.target.value }))
               }
-              className="min-h-24 resize-none text-sm md:text-base"
+              className="min-h-24 resize-none text-sm md:text-base border-gray-300"
             />
           </div>
-
-          <div className="space-y-3">
-            <Label className="text-sm md:text-base font-semibold">
-              Notice Categories
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
-              {CATEGORIES.map((category) => (
-                <label
-                  key={category}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.categories.includes(category)}
-                    onChange={() => toggleCategory(category)}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600"
-                  />
-                  <span className="text-xs md:text-sm text-gray-700">
-                    {category}
-                  </span>
-                </label>
-              ))}
-            </div>
-            {errors.categories && (
-              <p className="text-xs md:text-sm text-red-600">
-                {errors.categories}
-              </p>
-            )}
-          </div>
-
           <div className="space-y-2">
             <Label className="text-sm md:text-base font-semibold">
               Upload Attachments (optional)
@@ -526,7 +476,7 @@ export function CreateNoticeForm({
                 {formData.attachments.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg text-sm md:text-base"
+                    className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg text-sm md:text-base max-w-72"
                   >
                     <span className="text-xs md:text-sm text-gray-700 flex-1 truncate">
                       {file.name}
@@ -543,30 +493,30 @@ export function CreateNoticeForm({
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-end pt-6 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end pt-6">
             <Button
               variant="outline"
               onClick={onCancel}
-              className="px-4 md:px-6 bg-transparent text-sm md:text-base w-full sm:w-auto"
+              className="px-4 md:px-6 bg-transparent text-sm md:text-base w-full sm:w-auto rounded-full text-gray-600"
             >
               Cancel
             </Button>
             <Button
               variant="outline"
               onClick={handleSaveDraft}
-              className="px-4 md:px-6 bg-transparent text-sm md:text-base w-full sm:w-auto"
+              className="px-4 md:px-6 bg-transparent text-sm md:text-base w-full sm:w-auto rounded-full text-[#3B82F6]"
             >
               Save as Draft
             </Button>
             <Button
               onClick={handlePublish}
-              className="px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-base w-full sm:w-auto"
+              className="px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-base w-full sm:w-auto rounded-full"
             >
               Publish Notice
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

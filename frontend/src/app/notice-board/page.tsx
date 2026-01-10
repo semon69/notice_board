@@ -19,7 +19,7 @@ export default function NoticeBoardPage() {
 
   return (
     <MainLayout greeting="Good Afternoon Asif" date="13 June, 2026">
-      <div className="p-3 sm:p-4 md:p-6 w-full">
+      <div className="p-3 sm:p-4 md:p-6 w-full bg-[#F5F6FA]">
         {activeTab === "create" ? (
           <CreateNoticeForm
             onSuccess={handleNoticePublished}

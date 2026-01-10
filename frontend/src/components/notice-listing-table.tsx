@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -12,7 +11,15 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit2, Trash2, Plus, SlidersHorizontal } from "lucide-react";
+import {
+  Eye,
+  Edit2,
+  Plus,
+  SlidersHorizontal,
+  Pencil,
+  EllipsisVertical,
+  SquarePen,
+} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface Notice {
@@ -103,6 +110,8 @@ export function NoticeListingTable({
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
+
   const itemsPerPage = 5;
 
   const activeCount = notices.filter((n) => n.status === "published").length;
@@ -150,16 +159,18 @@ export function NoticeListingTable({
   };
 
   const getTypeColor = (type: string): string => {
-    if (type.includes("General")) return "bg-blue-100 text-blue-800";
-    if (type.includes("Holiday")) return "bg-green-100 text-green-800";
-    if (type.includes("HR")) return "bg-purple-100 text-purple-800";
-    if (type.includes("Finance")) return "bg-amber-100 text-amber-800";
-    if (type.includes("IT")) return "bg-cyan-100 text-cyan-800";
-    if (type.includes("Department")) return "bg-indigo-100 text-indigo-800";
-    if (type.includes("Warning")) return "bg-orange-100 text-orange-800";
-    if (type.includes("Emergency")) return "bg-red-100 text-red-800";
-    return "bg-gray-100 text-gray-800";
+    if (type.includes("General")) return " text-blue-700";
+    if (type.includes("Holiday")) return "text-green-700";
+    if (type.includes("HR")) return " text-purple-700";
+    if (type.includes("Finance")) return " text-amber-700";
+    if (type.includes("Database")) return " text-cyan-700";
+    if (type.includes("Department")) return " text-indigo-700";
+    if (type.includes("Sales")) return " text-orange-700";
+    if (type.includes("Web")) return " text-red-700";
+    return " text-gray-800";
   };
+
+  console.log({ paginatedNotices });
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -195,226 +206,266 @@ export function NoticeListingTable({
           <h2 className="text-lg md:text-xl font-semibold text-[#232948]">
             Notice Management
           </h2>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-3 items-center text-sm">
             <p className="text-[#00A46E]">Active Notices: {activeCount}</p>
+            <p>|</p>
             <p className="text-[#FFA307]">Draft Notice:{draftCount}</p>
           </div>
         </div>
-        <div>
+        <div className="flex gap-3 items-center">
           <Button
             onClick={onCreateNotice}
-            className="bg-orange-600 hover:bg-orange-700 text-white gap-2 w-full sm:w-auto text-sm md:text-base"
+            className="bg-[#F95524] text-white gap-2 w-full sm:w-auto text-sm md:text-base"
           >
             <Plus size={20} />
             Create Notice
           </Button>
           <Button
+            variant="outline"
             onClick={onCreateNotice}
-            className="bg-orange-600 hover:bg-orange-700 text-white gap-2 w-full sm:w-auto text-sm md:text-base"
+            className="text-[#F59E0B]  gap-2 w-full sm:w-auto text-sm md:text-base"
           >
-            <Plus size={20} />
-            Create Notice
+            <Pencil size={20} />
+            All Draft Notice
           </Button>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-            <div className="text-xs md:text-sm font-medium text-gray-700">
-              Filter by:
-            </div>
-
-            <Select
-              value={filterDepartment}
-              onValueChange={setFilterDepartment}
-            >
-              <SelectTrigger className="w-full sm:w-48 text-sm md:text-base">
-                <SelectValue placeholder="Departments or Individuals" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {getDepartments().map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Employee Id or Name"
-              className="w-full sm:w-48 text-sm md:text-base"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-32 text-sm md:text-base">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="unpublished">Unpublished</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              className="gap-2 bg-transparent w-full sm:w-auto text-sm md:text-base"
-              onClick={() => {
-                setFilterDepartment("");
-                setFilterStatus("");
-                setSearchQuery("");
-                setCurrentPage(1);
-              }}
-            >
-              <SlidersHorizontal size={18} />
-              Reset Filters
-            </Button>
+      <div className="py-4 pl-4 md:py-6 md:pl-6 md:flex md:flex-row md:justify-end">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+          <div className="text-xs md:text-sm font-medium text-[#232948]">
+            Filter by :
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs md:text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700">
+          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <SelectTrigger className="w-full sm:w-48 text-sm md:text-base border-gray-300 text-[#595F7A]">
+              <SelectValue placeholder="Departments or Individuals" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all">All Departments</SelectItem>
+              {getDepartments().map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Input
+            placeholder="Employee Id or Name"
+            className="w-full sm:w-48 text-sm md:text-base border-gray-300 outline-0"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full sm:w-32 text-sm md:text-base border-gray-300 text-[#595F7A]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="unpublished">Unpublished</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            className="gap-2 bg-transparent w-full sm:w-auto text-sm md:text-base border-gray-300 text-[#3B82F6]"
+            onClick={() => {
+              setFilterDepartment("");
+              setFilterStatus("");
+              setSearchQuery("");
+              setCurrentPage(1);
+            }}
+          >
+            <SlidersHorizontal size={18} />
+            Reset Filters
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-0">
+        <div className="overflow-x-auto border-2 border-gray-300 rounded-lg">
+          <table className="w-full text-xs md:text-sm ">
+            <thead>
+              <tr className="border-b border-gray-300 bg-gray-50 text-[#232948]">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold">
+                  <input type="checkbox" className="rounded border-gray-300" />
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold">
+                  Title
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold hidden lg:table-cell">
+                  Notice Type
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold hidden md:table-cell">
+                  Departments/Individual
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold hidden sm:table-cell">
+                  Published On
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold">
+                  Status
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-[16px] font-semibold">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedNotices.map((notice) => (
+                <tr
+                  key={notice.id}
+                  className="border-b border-gray-300 hover:bg-gray-50 text-[#232948]"
+                >
+                  <td className="px-3 md:px-6 py-3 md:py-4">
                     <input
                       type="checkbox"
                       className="rounded border-gray-300"
                     />
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700">
-                    Title
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700 hidden lg:table-cell">
-                    Notice Type
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700 hidden md:table-cell">
-                    Departments/Individual
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700 hidden sm:table-cell">
-                    Published On
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedNotices.map((notice) => (
-                  <tr key={notice.id} className="border-b hover:bg-gray-50">
-                    <td className="px-3 md:px-6 py-3 md:py-4">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 text-gray-900 max-w-xs truncate">
-                      {notice.title}
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 hidden lg:table-cell">
+                  </td>
+                  <td className="px-3 md:px-6 py-3 md:py-4 text-sm max-w-xs truncate">
+                    {notice.title}
+                  </td>
+                  <td className="px-3 md:px-6 py-3 md:py-4 hidden lg:table-cell text-[#595F7A]">
+                    {notice.type}
+                  </td>
+                  <td
+                    className={`px-3 md:px-6 py-3 md:py-4 ${getTypeColor(
+                      notice.department
+                    )}  hidden md:table-cell text-xs md:text-sm`}
+                  >
+                    {notice.department}
+                  </td>
+                  <td className="px-3 md:px-6 py-3 md:py-4 text-[#595F7A] hidden sm:table-cell text-xs md:text-sm">
+                    {notice.publishedOn}
+                  </td>
+                  <td className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge
-                        className={`${getTypeColor(
-                          notice.type
-                        )} border-0 font-normal text-xs`}
+                        className={
+                          notice.status === "published"
+                            ? "bg-[#DAFAEF] text-[#00A46E] border-0 text-xs"
+                            : notice.status === "draft"
+                            ? "bg-orange-100 text-orange-800 border-0 text-xs"
+                            : "bg-gray-100 text-gray-800 border-0 text-xs"
+                        }
                       >
-                        {notice.type}
+                        {notice.status.charAt(0).toUpperCase() +
+                          notice.status.slice(1)}
                       </Badge>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 text-blue-600 hidden md:table-cell text-xs md:text-sm">
-                      {notice.department}
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 text-gray-700 hidden sm:table-cell text-xs md:text-sm">
-                      {notice.publishedOn}
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge
-                          className={
-                            notice.status === "published"
-                              ? "bg-green-100 text-green-800 border-0 text-xs"
-                              : notice.status === "draft"
-                              ? "bg-orange-100 text-orange-800 border-0 text-xs"
-                              : "bg-gray-100 text-gray-800 border-0 text-xs"
-                          }
+                    </div>
+                  </td>
+                  <td className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center gap-1 md:gap-2">
+                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
+                        <Eye size={16} className="text-gray-600" />
+                      </button>
+                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
+                        <SquarePen size={16} className="text-gray-600" />
+                      </button>
+                      {/* Ellipsis */}
+                      <button
+                        onClick={() =>
+                          setActiveNoticeId(
+                            activeNoticeId === notice.id ? null : notice.id
+                          )
+                        }
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                      >
+                        <EllipsisVertical size={16} className="text-gray-600" />
+                      </button>
+                      {activeNoticeId === notice.id && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-8 mt-24 z-50 bg-gray-100 border border-gray-300 rounded-lg shadow-md p-3 w-40"
                         >
-                          {notice.status.charAt(0).toUpperCase() +
-                            notice.status.slice(1)}
-                        </Badge>
-                        <Switch
-                          checked={notice.status === "published"}
-                          onCheckedChange={() => toggleStatus(notice.id)}
-                          className="scale-75 md:scale-100"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4">
-                      <div className="flex items-center gap-1 md:gap-2">
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                          <Eye size={16} className="text-gray-600" />
-                        </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                          <Edit2 size={16} className="text-gray-600" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteNotice(notice.id)}
-                          className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          <Trash2 size={16} className="text-red-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">
+                              {notice.status === "published"
+                                ? "Published"
+                                : "Draft"}
+                            </span>
 
-          <div className="flex items-center justify-center gap-1 md:gap-2 p-3 md:p-4 border-t flex-wrap">
+                            {/* <Switch
+                              // className="bg-green-500"
+                              className="
+        h-5 w-9
+        data-[state=checked]:bg-[#08b57c]
+        data-[state=unchecked]:bg-gray-300
+      "
+                              checked={notice.status === "published"}
+                              onCheckedChange={() => {
+                                toggleStatus(notice.id);
+                                setActiveNoticeId(null); // close after toggle
+                              }}
+                            /> */}
+                            <Switch
+                              checked={notice.status === "published"}
+                              onCheckedChange={() => toggleStatus(notice.id)}
+                              className="
+      relative inline-flex h-4 w-8 items-center rounded-full
+      data-[state=checked]:bg-[#00A46E]
+      data-[state=unchecked]:bg-gray-300
+      transition-colors
+    "
+                            >
+                              <span
+                                className="
+        inline-block h-3 w-3 transform rounded-full bg-white shadow
+        transition-transform
+        data-[state=checked]:translate-x-3.5
+        data-[state=unchecked]:translate-x-0.5
+      "
+                              />
+                            </Switch>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-center gap-1 md:gap-2 p-3 md:p-4 flex-wrap">
+          <button
+            className="p-2 hover:bg-gray-100 rounded text-sm md:text-base"
+            disabled={currentPage === 1}
+          >
+            ←
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
-              className="p-2 hover:bg-gray-100 rounded text-sm md:text-base"
-              disabled={currentPage === 1}
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center text-xs md:text-sm ${
+                currentPage === page
+                  ? "bg-blue-100 text-blue-600 font-semibold"
+                  : "hover:bg-gray-100 text-gray-700"
+              }`}
             >
-              ←
+              {page}
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center text-xs md:text-sm ${
-                  currentPage === page
-                    ? "bg-blue-100 text-blue-600 font-semibold"
-                    : "hover:bg-gray-100 text-gray-700"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              className="p-2 hover:bg-gray-100 rounded text-sm md:text-base"
-              onClick={() =>
-                setCurrentPage(Math.min(currentPage + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-            >
-              →
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+          <button
+            className="p-2 hover:bg-gray-100 rounded text-sm md:text-base"
+            onClick={() =>
+              setCurrentPage(Math.min(currentPage + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+          >
+            →
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
