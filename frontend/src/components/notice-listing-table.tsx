@@ -19,6 +19,7 @@ import {
   Pencil,
   EllipsisVertical,
   SquarePen,
+  Trash2,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNotices } from "@/lib/api-hooks";
@@ -56,8 +57,8 @@ export const formatDate = (dateString: string) => {
 export function NoticeListingTable({
   onCreateNotice,
 }: NoticeListingTableProps) {
-  const { notices, fetchNotices, updateNoticeStatus } = useNotices();
-  console.log({ notices });
+  const { notices, fetchNotices, updateNoticeStatus, deleteNotice } =
+    useNotices();
   const [currentPage, setCurrentPage] = useState(1);
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -119,6 +120,19 @@ export function NoticeListingTable({
       console.error("Failed to update status", err);
     }
   };
+  const handleDeleteNotice = async (id: string) => {
+    setActiveNoticeId(null);
+
+    // Optional confirmation
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this notice?"
+    );
+
+    if (!confirmed) return;
+
+    await deleteNotice(id);
+  };
+
   const handleViewNotice = (notice: Notice) => {
     setSelectedNotice(notice);
     setShowDetailModal(true);
@@ -140,13 +154,13 @@ export function NoticeListingTable({
           <div className="flex gap-3 items-center text-sm">
             <p className="text-[#00A46E]">Active Notices: {activeCount}</p>
             <p>|</p>
-            <p className="text-[#FFA307]">Draft Notice:{draftCount}</p>
+            <p className="text-[#FFA307]">Draft Notice: {draftCount}</p>
           </div>
         </div>
         <div className="flex gap-3 items-center">
           <Button
             onClick={onCreateNotice}
-            className="bg-[#F95524] text-white gap-2 w-full sm:w-auto text-sm md:text-base"
+            className="bg-[#F95524] text-white gap-2 w-full sm:w-auto text-sm md:text-base  cursor-pointer"
           >
             <Plus size={20} />
             Create Notice
@@ -154,7 +168,7 @@ export function NoticeListingTable({
           <Button
             variant="outline"
             onClick={allDraftNotice}
-            className="text-[#F59E0B]  gap-2 w-full sm:w-auto text-sm md:text-base"
+            className="text-[#F59E0B] cursor-pointer gap-2 w-full sm:w-auto text-sm md:text-base"
           >
             <Pencil size={20} />
             All Draft Notice
@@ -206,7 +220,7 @@ export function NoticeListingTable({
 
           <Button
             variant="outline"
-            className="gap-2 bg-transparent w-full sm:w-auto text-sm md:text-base border-gray-300 text-[#3B82F6]"
+            className="gap-2 cursor-pointer bg-transparent w-full sm:w-auto text-sm md:text-base border-gray-300 text-[#3B82F6]"
             onClick={() => {
               setFilterDepartment("");
               setFilterStatus("");
@@ -300,6 +314,10 @@ export function NoticeListingTable({
                       >
                         <Eye size={16} className="text-gray-600" />
                       </button>
+                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
+                        <SquarePen size={16} className="text-gray-600" />
+                      </button>
+                      {/* Ellipsis */}
                       <button
                         onClick={() =>
                           setActiveNoticeId(
@@ -308,17 +326,14 @@ export function NoticeListingTable({
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                       >
-                        <SquarePen size={16} className="text-gray-600" />
-                      </button>
-                      {/* Ellipsis */}
-                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
                         <EllipsisVertical size={16} className="text-gray-600" />
                       </button>
                       {activeNoticeId === notice._id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-8 mt-24 z-50 bg-gray-100 border border-gray-300 rounded-lg shadow-md p-3 w-40"
+                          className="absolute right-8 mt-32 z-50 bg-gray-100 border border-gray-300 rounded-lg shadow-md p-3 w-40 space-y-3"
                         >
+                          {/* Publish / Unpublish */}
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-700">
                               {notice.status === "published"
@@ -332,6 +347,18 @@ export function NoticeListingTable({
                               }
                             />
                           </div>
+
+                          {/* Divider */}
+                          <div className="h-px bg-gray-300" />
+
+                          {/* Delete */}
+                          <button
+                            onClick={() => handleDeleteNotice(notice._id)}
+                            className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 w-full p-1 rounded"
+                          >
+                            <Trash2 size={16} />
+                            Delete
+                          </button>
                         </div>
                       )}
                     </div>

@@ -61,9 +61,10 @@ export function useNotices() {
       return id
     },
     onSuccess: (id) => {
-      queryClient.setQueryData<Notice[]>(["notices"], (old) =>
-        old?.filter((n) => n.id !== id) ?? []
-      )
+      // queryClient.setQueryData<Notice[]>(["notices"], (old) =>
+      //   old?.filter((n) => n.id !== id) ?? []
+      // )
+      queryClient.invalidateQueries({ queryKey: ["notices"] })
     },
   })
 
