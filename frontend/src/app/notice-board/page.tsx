@@ -12,6 +12,7 @@ export default function NoticeBoardPage() {
   const [successData, setSuccessData] = useState<any>(null);
 
   const handleNoticePublished = (data: any) => {
+    console.log({ data }, 'from handle publish');
     setSuccessData(data);
     setShowSuccessModal(true);
     setActiveTab("listing");

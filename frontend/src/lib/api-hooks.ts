@@ -1,93 +1,83 @@
 "use client"
 
-import { useCallback, useState } from "react"
-import { apiClient, type Notice, type Employee } from "./api-client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { apiClient, Notice } from "./api-client"
 
 export function useNotices() {
-  const [notices, setNotices] = useState<Notice[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  const fetchNotices = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    const response = await apiClient.getNotices()
-    if (response.success && response.data) {
-      setNotices(response.data)
-    } else {
-      setError(response.error || "Failed to fetch notices")
-    }
-    setLoading(false)
-  }, [])
+  // GET all notices
+  const { data: notices, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["notices"],
+    queryFn: async () => {
+      const res = await apiClient.getNotices()
+      if (!res.success) throw new Error(res.error)
+      return res.data!
+    },
+  })
 
-  const createNotice = useCallback(async (notice: Notice) => {
-    setLoading(true)
-    setError(null)
-    const response = await apiClient.createNotice(notice)
-    if (response.success && response.data) {
-      setNotices((prev) => [response.data!, ...prev])
-      return response.data
-    } else {
-      setError(response.error || "Failed to create notice")
-      return null
-    }
-    setLoading(false)
-  }, [])
+  // CREATE notice
+  const createNoticeMutation = useMutation({
+    mutationFn: async (notice: Notice) => {
+      console.log('mutate here');
+      const res = await apiClient.createNotice(notice)
+      if (!res.success) throw new Error(res.error)
+      return res.data!
+    },
+    onSuccess: (newNotice) => {
+      // queryClient.setQueryData<Notice[]>(["notices"], (old) =>
+      //   old ? [newNotice, ...old] : [newNotice]
+      // )
+      queryClient.invalidateQueries({ queryKey: ["notices"] })
+    },
+  })
 
-  const updateNoticeStatus = useCallback(async (id: string, status: string) => {
-    const response = await apiClient.toggleNoticeStatus(id, status)
-    if (response.success && response.data) {
-      setNotices((prev) => prev.map((n) => (n.id === id ? response.data! : n)))
-      return response.data
-    } else {
-      setError(response.error || "Failed to update notice")
-      return null
-    }
-  }, [])
+  // UPDATE status
+  const updateNoticeStatusMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string
+      status: string
+    }) => {
+      const res = await apiClient.toggleNoticeStatus(id, status)
+      if (!res.success) throw new Error(res.error)
+      return res.data!
+    },
+    onSuccess: (updated) => {
+      // queryClient.setQueryData<Notice[]>(["notices"], (old) =>
+      //   old?.map((n) => (n.id === updated.id ? updated : n)) ?? []
+      // )
+      queryClient.invalidateQueries({ queryKey: ["notices"] })
+    },
+  })
 
-  const deleteNotice = useCallback(async (id: string) => {
-    const response = await apiClient.deleteNotice(id)
-    if (response.success) {
-      setNotices((prev) => prev.filter((n) => n.id !== id))
-      return true
-    } else {
-      setError(response.error || "Failed to delete notice")
-      return false
-    }
-  }, [])
+  // DELETE notice
+  const deleteNoticeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.deleteNotice(id)
+      if (!res.success) throw new Error(res.error)
+      return id
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData<Notice[]>(["notices"], (old) =>
+        old?.filter((n) => n.id !== id) ?? []
+      )
+    },
+  })
 
   return {
-    notices,
-    loading,
-    error,
-    fetchNotices,
-    createNotice,
-    updateNoticeStatus,
-    deleteNotice,
+    // same API as before
+    notices: notices,
+    loading: isLoading,
+    error: error?.message ?? null,
+
+    fetchNotices: refetch,
+    createNotice: createNoticeMutation.mutateAsync,
+    updateNoticeStatus: (id: string, status: string) =>
+      updateNoticeStatusMutation.mutateAsync({ id, status }),
+    deleteNotice: deleteNoticeMutation.mutateAsync,
   }
 }
 
-export function useEmployees() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchEmployees = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    const response = await apiClient.getEmployees()
-    if (response.success && response.data) {
-      setEmployees(response.data)
-    } else {
-      setError(response.error || "Failed to fetch employees")
-    }
-    setLoading(false)
-  }, [])
-
-  return {
-    employees,
-    loading,
-    error,
-    fetchEmployees,
-  }
-}

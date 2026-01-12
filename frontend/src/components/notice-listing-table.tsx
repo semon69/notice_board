@@ -21,107 +21,63 @@ import {
   SquarePen,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-
-interface Notice {
-  id: string;
-  title: string;
-  type: string;
-  department: string;
-  publishedOn: string;
-  status: "published" | "draft" | "unpublished";
-}
+import { useNotices } from "@/lib/api-hooks";
+import { Notice } from "@/lib/api-client";
+import Toggle from "./Toggle";
+import { NoticeDetailModal } from "./NoticeDetailsModal";
 
 interface NoticeListingTableProps {
   onCreateNotice: () => void;
 }
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
 
-const mockNotices: Notice[] = [
-  {
-    id: "1",
-    title: "Office closed on Friday for maintenance",
-    type: "General / Company-A",
-    department: "All Department",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "2",
-    title: "Eid al-Fit holiday schedule",
-    type: "Holiday & Event",
-    department: "Finance",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "3",
-    title: "Updated code of conduct policy",
-    type: "HR & Policy Update",
-    department: "Sales Team",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "4",
-    title: "Payroll for October will be processed on 28th",
-    type: "Finance & Payroll",
-    department: "Web Team",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "5",
-    title: "System update scheduled for Oct 10 02:00-11:00 PM",
-    type: "IT / System Maintenance",
-    department: "Database Team",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "6",
-    title: "Design team sprint review moved to Tuesday",
-    type: "Department / Team",
-    department: "Admin",
-    publishedOn: "15-Jun-2025",
-    status: "published",
-  },
-  {
-    id: "7",
-    title: "Unauthorized absence recorded on 10 Oct 2025",
-    type: "Warning / Disciplinary",
-    department: "Individual",
-    publishedOn: "15-Jun-2025",
-    status: "unpublished",
-  },
-  {
-    id: "8",
-    title: "Office closed today due to servers weather",
-    type: "Emergency / Urgent",
-    department: "HR",
-    publishedOn: "15-Jun-2025",
-    status: "draft",
-  },
-];
+  const day = date.getDate(); // 1-31
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const month = monthNames[date.getMonth()]; // 0-11
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};
 
 export function NoticeListingTable({
   onCreateNotice,
 }: NoticeListingTableProps) {
-  const [notices, setNotices] = useState<Notice[]>(mockNotices);
+  const { notices, fetchNotices, updateNoticeStatus } = useNotices();
+  console.log({ notices });
   const [currentPage, setCurrentPage] = useState(1);
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
+  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
-  const activeCount = notices.filter((n) => n.status === "published").length;
-  const draftCount = notices.filter((n) => n.status === "draft").length;
+  const activeCount = notices?.data?.filter(
+    (n) => n.status === "published"
+  ).length;
+  const draftCount = notices?.data?.filter((n) => n.status === "draft").length;
 
-  const filteredNotices = notices.filter((notice) => {
+  const filteredNotices = notices?.data?.filter((notice) => {
     const matchesDept =
       !filterDepartment ||
       filterDepartment === "all" ||
-      notice.department === filterDepartment;
+      notice.targetDepartment === filterDepartment;
     const matchesStatus =
       !filterStatus || filterStatus === "all" || notice.status === filterStatus;
     const matchesSearch =
@@ -130,77 +86,51 @@ export function NoticeListingTable({
     return matchesDept && matchesStatus && matchesSearch;
   });
 
-  const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredNotices?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedNotices = filteredNotices.slice(
+  const paginatedNotices = filteredNotices?.slice(
     startIndex,
     startIndex + itemsPerPage
   );
-
-  const toggleStatus = (id: string) => {
-    setNotices((prev) =>
-      prev.map((n) => {
-        if (n.id === id) {
-          const newStatus =
-            n.status === "published" ? "unpublished" : "published";
-          return { ...n, status: newStatus as "published" | "unpublished" };
-        }
-        return n;
-      })
-    );
-  };
-
-  const handleDeleteNotice = (id: string) => {
-    setNotices((prev) => prev.filter((notice) => notice.id !== id));
-  };
-
   const getDepartments = () => {
-    return [...new Set(notices.map((n) => n.department))].sort();
+    return [...new Set(notices?.data?.map((n) => n.targetDepartment))].sort();
   };
 
   const getTypeColor = (type: string): string => {
-    if (type.includes("General")) return " text-blue-700";
-    if (type.includes("Holiday")) return "text-green-700";
-    if (type.includes("HR")) return " text-purple-700";
-    if (type.includes("Finance")) return " text-amber-700";
-    if (type.includes("Database")) return " text-cyan-700";
-    if (type.includes("Department")) return " text-indigo-700";
-    if (type.includes("Sales")) return " text-orange-700";
-    if (type.includes("Web")) return " text-red-700";
+    if (type?.includes("Holiday")) return "text-green-700";
+    if (type?.includes("HR")) return " text-purple-700";
+    if (type?.includes("General")) return " text-blue-700";
+    if (type?.includes("Finance")) return " text-amber-700";
+    if (type?.includes("Database")) return " text-cyan-700";
+    if (type?.includes("Department")) return " text-indigo-700";
+    if (type?.includes("Sales")) return " text-orange-700";
+    if (type?.includes("Web")) return " text-red-700";
     return " text-gray-800";
   };
+
+  const toggleStatus = async (id: string, currentStatus: Notice["status"]) => {
+    const nextStatus = currentStatus === "published" ? "unpublished" : "published";
+
+    try {
+      setActiveNoticeId(null);
+      await updateNoticeStatus(id, nextStatus);
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+  };
+  const handleViewNotice = (notice: Notice) => {
+    setSelectedNotice(notice);
+    setShowDetailModal(true);
+  };
+
+  const allDraftNotice = () => {
+    setFilterStatus('draft')
+  }
 
   console.log({ paginatedNotices });
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-gray-900">
-                {activeCount}
-              </div>
-              <div className="text-xs md:text-sm text-gray-600 mt-1">
-                Active Notices
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-gray-900">
-                {draftCount}
-              </div>
-              <div className="text-xs md:text-sm text-gray-600 mt-1">
-                Draft Notices
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div> */}
-
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg md:text-xl font-semibold text-[#232948]">
@@ -222,7 +152,7 @@ export function NoticeListingTable({
           </Button>
           <Button
             variant="outline"
-            onClick={onCreateNotice}
+            onClick={allDraftNotice}
             className="text-[#F59E0B]  gap-2 w-full sm:w-auto text-sm md:text-base"
           >
             <Pencil size={20} />
@@ -243,7 +173,7 @@ export function NoticeListingTable({
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectItem value="all">All Departments</SelectItem>
-              {getDepartments().map((dept) => (
+              {getDepartments().map((dept: any) => (
                 <SelectItem key={dept} value={dept}>
                   {dept}
                 </SelectItem>
@@ -318,7 +248,7 @@ export function NoticeListingTable({
               </tr>
             </thead>
             <tbody>
-              {paginatedNotices.map((notice) => (
+              {paginatedNotices?.map((notice) => (
                 <tr
                   key={notice.id}
                   className="border-b border-gray-300 hover:bg-gray-50 text-[#232948]"
@@ -330,20 +260,20 @@ export function NoticeListingTable({
                     />
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4 text-sm max-w-xs truncate">
-                    {notice.title}
+                    {notice.noticeTitle}
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4 hidden lg:table-cell text-[#595F7A]">
-                    {notice.type}
+                    {notice.noticeType.join(", ")}
                   </td>
                   <td
                     className={`px-3 md:px-6 py-3 md:py-4 ${getTypeColor(
                       notice.department
                     )}  hidden md:table-cell text-xs md:text-sm`}
                   >
-                    {notice.department}
+                    {notice.targetDepartment}
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4 text-[#595F7A] hidden sm:table-cell text-xs md:text-sm">
-                    {notice.publishedOn}
+                    {formatDate(notice.publishDate)}
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -351,9 +281,9 @@ export function NoticeListingTable({
                         className={
                           notice.status === "published"
                             ? "bg-[#DAFAEF] text-[#00A46E] border-0 text-xs"
-                            : notice.status === "draft"
-                            ? "bg-orange-100 text-orange-800 border-0 text-xs"
-                            : "bg-gray-100 text-gray-800 border-0 text-xs"
+                            : notice.status === "unpublished"
+                            ? "bg-gray-200 text-gray-700 border-0 text-xs"
+                            : "bg-orange-100 text-orange-800 border-0 text-xs"
                         }
                       >
                         {notice.status.charAt(0).toUpperCase() +
@@ -363,7 +293,10 @@ export function NoticeListingTable({
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4">
                     <div className="flex items-center gap-1 md:gap-2">
-                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
+                      <button
+                        onClick={() => handleViewNotice(notice)}
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                      >
                         <Eye size={16} className="text-gray-600" />
                       </button>
                       <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
@@ -373,14 +306,14 @@ export function NoticeListingTable({
                       <button
                         onClick={() =>
                           setActiveNoticeId(
-                            activeNoticeId === notice.id ? null : notice.id
+                            activeNoticeId === notice._id ? null : notice._id
                           )
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                       >
                         <EllipsisVertical size={16} className="text-gray-600" />
                       </button>
-                      {activeNoticeId === notice.id && (
+                      {activeNoticeId === notice._id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
                           className="absolute right-8 mt-24 z-50 bg-gray-100 border border-gray-300 rounded-lg shadow-md p-3 w-40"
@@ -389,41 +322,14 @@ export function NoticeListingTable({
                             <span className="text-sm text-gray-700">
                               {notice.status === "published"
                                 ? "Published"
-                                : "Draft"}
+                                : "Unpublished"}
                             </span>
-
-                            {/* <Switch
-                              // className="bg-green-500"
-                              className="
-        h-5 w-9
-        data-[state=checked]:bg-[#08b57c]
-        data-[state=unchecked]:bg-gray-300
-      "
+                            <Toggle
                               checked={notice.status === "published"}
-                              onCheckedChange={() => {
-                                toggleStatus(notice.id);
-                                setActiveNoticeId(null); // close after toggle
-                              }}
-                            /> */}
-                            <Switch
-                              checked={notice.status === "published"}
-                              onCheckedChange={() => toggleStatus(notice.id)}
-                              className="
-      relative inline-flex h-4 w-8 items-center rounded-full
-      data-[state=checked]:bg-[#00A46E]
-      data-[state=unchecked]:bg-gray-300
-      transition-colors
-    "
-                            >
-                              <span
-                                className="
-        inline-block h-3 w-3 transform rounded-full bg-white shadow
-        transition-transform
-        data-[state=checked]:translate-x-3.5
-        data-[state=unchecked]:translate-x-0.5
-      "
-                              />
-                            </Switch>
+                              onCheckedChange={() =>
+                                toggleStatus(notice._id, notice.status)
+                              }
+                            />
                           </div>
                         </div>
                       )}
@@ -466,6 +372,13 @@ export function NoticeListingTable({
           </button>
         </div>
       </div>
+      {selectedNotice && (
+        <NoticeDetailModal
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          notice={selectedNotice}
+        />
+      )}
     </div>
   );
 }

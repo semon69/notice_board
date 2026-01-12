@@ -22,7 +22,10 @@ export function MainLayout({ children, greeting, date }: MainLayoutProps) {
         }`}
         onClick={() => setSidebarOpen(false)}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+        ></div>
       </div>
 
       <div

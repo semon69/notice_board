@@ -1,13 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.example.com"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
 
 export interface Notice {
   id?: string
   targetDepartment: string
   noticeTitle: string
-  employeeId: string
-  employeeName: string
-  position: string
-  noticeType: string
+  selectedEmployee: any
+  noticeType: string[]
   publishDate: string
   noticeBody: string
   categories: string[]
@@ -62,32 +60,13 @@ class ApiClient {
   }
 
   // Notices API
+  // api-client.ts
   async createNotice(notice: Notice): Promise<ApiResponse<Notice>> {
-    const formData = new FormData()
-    formData.append("targetDepartment", notice.targetDepartment)
-    formData.append("noticeTitle", notice.noticeTitle)
-    formData.append("employeeId", notice.employeeId)
-    formData.append("employeeName", notice.employeeName)
-    formData.append("position", notice.position)
-    formData.append("noticeType", notice.noticeType)
-    formData.append("publishDate", notice.publishDate)
-    formData.append("noticeBody", notice.noticeBody)
-    formData.append("categories", JSON.stringify(notice.categories))
-    formData.append("status", notice.status)
-
-    // Add attachments
-    if (notice.attachments && notice.attachments.length > 0) {
-      notice.attachments.forEach((file, index) => {
-        if (file instanceof File) {
-          formData.append(`attachments[${index}]`, file)
-        }
-      })
-    }
-
     try {
-      const response = await fetch(`${this.baseUrl}/notices`, {
+      const response = await fetch(`${this.baseUrl}/notices/create`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notice), // send plain JSON
       })
 
       if (!response.ok) {
@@ -97,11 +76,15 @@ class ApiClient {
       const data = await response.json()
       return { success: true, data }
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to create notice" }
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create notice",
+      }
     }
   }
 
-  async getNotices(): Promise<ApiResponse<Notice[]>> {
+
+  async getNotices(): Promise<any> {
     return this.request<Notice[]>("/notices", { method: "GET" })
   }
 
@@ -125,19 +108,6 @@ class ApiClient {
       method: "PATCH",
       body: JSON.stringify({ status }),
     })
-  }
-
-  // Employees API
-  async getEmployees(): Promise<ApiResponse<Employee[]>> {
-    return this.request<Employee[]>("/employees", { method: "GET" })
-  }
-
-  async getEmployeeById(id: string): Promise<ApiResponse<Employee>> {
-    return this.request<Employee>(`/employees/${id}`, { method: "GET" })
-  }
-
-  async getDepartments(): Promise<ApiResponse<string[]>> {
-    return this.request<string[]>("/departments", { method: "GET" })
   }
 }
 

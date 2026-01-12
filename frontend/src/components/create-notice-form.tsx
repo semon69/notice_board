@@ -12,14 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChevronDown, UploadCloud } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Upload, X, ChevronLeft } from "lucide-react";
-import { useEmployees } from "@/lib/api-hooks";
+import { useNotices } from "@/lib/api-hooks";
 import { Button } from "./ui/button";
 
 interface FormData {
@@ -28,7 +28,7 @@ interface FormData {
   employeeId: string;
   employeeName: string;
   position: string;
-  noticeType: string;
+  noticeType: string[];
   publishDate: string;
   noticeBody: string;
   categories: string[];
@@ -41,31 +41,32 @@ interface CreateNoticeFormProps {
 }
 
 const DEPARTMENTS = [
-  { value: "individual", label: "Individual" },
-  { value: "sales", label: "Sales Department" },
-  { value: "hr", label: "HR Department" },
-  { value: "finance", label: "Finance Department" },
-  { value: "it", label: "IT Department" },
+  "Individual",
+  "IT",
+  "HR",
+  "Finance",
+  "Operations",
+  "Marketing",
+  "Sales",
 ];
+// "Individual", "IT", "HR", "Finance", "Operations", "Marketing", "Sales"
 
 const FALLBACK_EMPLOYEES = [
-  { id: "EMP001", name: "John Doe", position: "Sales Manager" },
-  { id: "EMP002", name: "Jane Smith", position: "HR Manager" },
-  { id: "EMP003", name: "Mike Johnson", position: "Developer" },
-  { id: "EMP004", name: "Sarah Williams", position: "Finance Manager" },
+  { id: "EMP001", name: "David Raya", position: "Sales Manager" },
+  { id: "EMP002", name: "Declan Rice", position: "HR Manager" },
+  { id: "EMP003", name: "Md Emon Sheikh", position: "Developer" },
+  { id: "EMP004", name: "Lweis Skelly", position: "Finance Manager" },
+  { id: "EMP006", name: "Martin Odegard", position: "Operations Manager" },
+  { id: "EMP007", name: "Bukayo Saka", position: "Individual" },
+  { id: "EMP008", name: "Ben White", position: "IT Manager" },
+  { id: "EMP009", name: "Jurian Timber", position: "Finance Manager" },
+  { id: "EMP010", name: "Matrin Zubimendi", position: "Controll Manager" },
 ];
 
 const NOTICE_TYPES = [
-  "Warning / Disciplinary",
-  "Performance Improvement",
-  "Appreciation / Recognito",
-  "Attendance / Leave Issue",
-  "Payroll / Compensation",
-  "Contract / Role Update",
-  "Advisory / Personal Reminder",
-];
-
-const CATEGORIES = [
+  "General / Company-A",
+  "Holiday & Event",
+  "HR & Policy Update",
   "Warning / Disciplinary",
   "Performance Improvement",
   "Appreciation / Recognito",
@@ -79,8 +80,9 @@ export function CreateNoticeForm({
   onSuccess,
   onCancel,
 }: CreateNoticeFormProps) {
-  const { employees: apiEmployees, fetchEmployees } = useEmployees();
+  // const { employees: apiEmployees, fetchEmployees } = useEmployees();
   const [employees, setEmployees] = useState(FALLBACK_EMPLOYEES);
+  const { createNotice } = useNotices();
 
   const [formData, setFormData] = useState<FormData>({
     targetDepartment: "",
@@ -88,7 +90,7 @@ export function CreateNoticeForm({
     employeeId: "",
     employeeName: "",
     position: "",
-    noticeType: "",
+    noticeType: [],
     publishDate: "",
     noticeBody: "",
     categories: [],
@@ -97,16 +99,6 @@ export function CreateNoticeForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragActive, setDragActive] = useState(false);
-
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
-
-  useEffect(() => {
-    if (apiEmployees && apiEmployees.length > 0) {
-      setEmployees(apiEmployees as any);
-    }
-  }, [apiEmployees]);
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -122,8 +114,6 @@ export function CreateNoticeForm({
     if (!formData.noticeType) newErrors.noticeType = "Notice Type is required";
     if (!formData.publishDate)
       newErrors.publishDate = "Publish Date is required";
-    if (formData.categories.length === 0)
-      newErrors.categories = "At least one category is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -191,50 +181,61 @@ export function CreateNoticeForm({
   };
 
   const handlePublish = async () => {
-    if (validateForm()) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/notices`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...formData,
-              status: "published",
-              createdAt: new Date().toISOString(),
-            }),
-          }
-        );
-
-        if (response.ok) {
-          onSuccess(formData);
-        }
-      } catch (error) {
-        console.error("Failed to publish notice:", error);
-      }
+    if (!validateForm()) return;
+    const selectedEmployee = {
+      employeeId: formData.employeeId,
+      employeeName: formData.employeeName,
+      employeePosition: formData.position,
+    };
+    try {
+      const res: any = await createNotice({
+        ...formData,
+        selectedEmployee,
+        status: "published",
+      });
+      onSuccess(res.data);
+    } catch (err) {
+      console.error("Failed to publish notice:", err);
     }
   };
 
   const handleSaveDraft = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notices`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            status: "draft",
-            createdAt: new Date().toISOString(),
-          }),
-        }
-      );
+    // try {
+    // const response = await fetch(
+    //   `${process.env.NEXT_PUBLIC_API_URL}/notices`,
+    //   {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       ...formData,
+    //       status: "draft",
+    //       createdAt: new Date().toISOString(),
+    //     }),
+    //   }
+    // );
 
-      if (response.ok) {
-        onCancel();
-      }
-    } catch (error) {
-      console.error("Failed to save draft:", error);
+    // if (response.ok) {
+    //   onCancel();
+    // }
+    // } catch (error) {
+    //   console.error("Failed to save draft:", error);
+    // }
+    if (!validateForm()) return;
+    const selectedEmployee = {
+      employeeId: formData.employeeId,
+      employeeName: formData.employeeName,
+      employeePosition: formData.position,
+    };
+    try {
+      const res: any = await createNotice({
+        ...formData,
+        selectedEmployee,
+        status: "draft",
+      });
+
+      onSuccess(res.data);
+    } catch (err) {
+      console.error("Failed to publish notice:", err);
     }
   };
 
@@ -273,9 +274,9 @@ export function CreateNoticeForm({
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {DEPARTMENTS.map((dept) => (
-                  <SelectItem key={dept.value} value={dept.value}>
-                    {dept.label}
+                {DEPARTMENTS.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -369,23 +370,56 @@ export function CreateNoticeForm({
               <p className="text-sm md:text-base font-semibold mb-2">
                 <span className="text-red-500">*</span> Notice Type
               </p>
-              <Select
-                value={formData.noticeType}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, noticeType: value }))
-                }
-              >
-                <SelectTrigger className="h-10 text-sm md:text-base border-gray-300">
-                  <SelectValue placeholder="Select Notice Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  {NOTICE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 px-3 text-sm md:text-base"
+                  >
+                    <span className="truncate text-left">
+                      {formData.noticeType.length
+                        ? formData.noticeType.join(", ")
+                        : "Select Notice Type"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  </button>
+                </PopoverTrigger>
+
+                <PopoverContent
+                  align="start"
+                  className="w-[--radix-popover-trigger-width] p-2 bg-white"
+                >
+                  <div className="max-h-60 overflow-y-auto space-y-1">
+                    {NOTICE_TYPES.map((type) => {
+                      const checked = formData.noticeType.includes(type);
+
+                      return (
+                        <label
+                          key={type}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-100 cursor-pointer text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={checked}
+                            onChange={(e) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                noticeType: e.target.checked
+                                  ? [...prev.noticeType, type]
+                                  : prev.noticeType.filter((t) => t !== type),
+                              }));
+                            }}
+                          />
+                          <span>{type}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               {errors.noticeType && (
                 <p className="text-xs md:text-sm text-red-600">
                   {errors.noticeType}
@@ -436,20 +470,18 @@ export function CreateNoticeForm({
               Upload Attachments (optional)
             </Label>
             <div
-              className={`border-2 border-dashed rounded-lg p-6 md:p-8 text-center transition-colors ${
-                dragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 bg-gray-50"
-              }`}
+              className={`border border-dashed border-[#10B981] rounded-lg p-6 md:p-8 text-center transition-colors mt-2 cursor-pointer`}
+              onClick={() => document.getElementById("file-input")?.click()}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
               <div className="flex flex-col items-center gap-2">
-                <Upload size={32} className="text-blue-500" />
+                <UploadCloud size={32} className="text-[#10B981]" />
                 <p className="text-xs md:text-sm font-medium text-gray-700">
-                  Upload notice profile image or drag and drop.
+                  <span className="text-[#10B981]">Upload</span> notice profile
+                  image or drag and drop.
                 </p>
                 <p className="text-xs text-gray-600">
                   Accepted File Type: jpg, png
@@ -462,12 +494,12 @@ export function CreateNoticeForm({
                   className="hidden"
                   id="file-input"
                 />
-                <label
+                {/* <label
                   htmlFor="file-input"
                   className="mt-2 px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md cursor-pointer hover:bg-blue-600 text-xs md:text-sm"
                 >
                   Browse Files
-                </label>
+                </label> */}
               </div>
             </div>
 
@@ -504,13 +536,13 @@ export function CreateNoticeForm({
             <Button
               variant="outline"
               onClick={handleSaveDraft}
-              className="px-4 md:px-6 bg-transparent text-sm md:text-base w-full sm:w-auto rounded-full text-[#3B82F6]"
+              className="px-4 md:px-6 cursor-pointer bg-transparent text-sm md:text-base w-full sm:w-auto rounded-full text-[#3B82F6]"
             >
               Save as Draft
             </Button>
             <Button
               onClick={handlePublish}
-              className="px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-base w-full sm:w-auto rounded-full"
+              className="px-4 md:px-6 cursor-pointer bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-base w-full sm:w-auto rounded-full"
             >
               Publish Notice
             </Button>
