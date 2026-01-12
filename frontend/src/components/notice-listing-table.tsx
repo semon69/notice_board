@@ -109,7 +109,8 @@ export function NoticeListingTable({
   };
 
   const toggleStatus = async (id: string, currentStatus: Notice["status"]) => {
-    const nextStatus = currentStatus === "published" ? "unpublished" : "published";
+    const nextStatus =
+      currentStatus === "published" ? "unpublished" : "published";
 
     try {
       setActiveNoticeId(null);
@@ -124,8 +125,8 @@ export function NoticeListingTable({
   };
 
   const allDraftNotice = () => {
-    setFilterStatus('draft')
-  }
+    setFilterStatus("draft");
+  };
 
   console.log({ paginatedNotices });
 
@@ -299,10 +300,6 @@ export function NoticeListingTable({
                       >
                         <Eye size={16} className="text-gray-600" />
                       </button>
-                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
-                        <SquarePen size={16} className="text-gray-600" />
-                      </button>
-                      {/* Ellipsis */}
                       <button
                         onClick={() =>
                           setActiveNoticeId(
@@ -311,6 +308,10 @@ export function NoticeListingTable({
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                       >
+                        <SquarePen size={16} className="text-gray-600" />
+                      </button>
+                      {/* Ellipsis */}
+                      <button className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer">
                         <EllipsisVertical size={16} className="text-gray-600" />
                       </button>
                       {activeNoticeId === notice._id && (
